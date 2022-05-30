@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yankiservice
+  labels:
+    app: yankiservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: yankiservice
+  template:
+    metadata:
+      labels:
+        app: yankiservice
+        service: yankiservice
+    spec:
+      containers:
+        - name: yankiservice
+          image: yankiservice.azurecr.io/yankiservice:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+              protocol: TCP
+          env:
+            - name: ASPNETCORE_URLS
+              value: http://+:8083
+            - name: WebApiBaseAddress
+              value: http://webapi
