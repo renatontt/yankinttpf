@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: Yanki
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: cloudconfigserver
+      fail-fast: true
+      retry:
+        initial-interval: 1500
+        multiplier: 1.5
+        max-attempts: 30
+        max-interval: 8000
