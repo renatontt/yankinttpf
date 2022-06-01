@@ -2,10 +2,12 @@ package com.group7.yanki.serviceimpl;
 
 import com.group7.yanki.dto.LinkRequest;
 import com.group7.yanki.dto.Result;
+import com.group7.yanki.dto.TransactionEvent;
 import com.group7.yanki.model.Account;
 import com.group7.yanki.model.Yanki;
 import com.group7.yanki.repository.AccountRepository;
 import com.group7.yanki.repository.YankiRepository;
+import com.group7.yanki.service.AccountService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RMapReactive;
@@ -16,6 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -33,6 +36,9 @@ public class ListenService {
 
     @Autowired
     private MessageServiceImpl messageService;
+
+    @Autowired
+    private AccountService accountService;
 
     public ListenService(RedissonReactiveClient client) {
         this.accountMap = client.getMap("account", new TypedJsonJacksonCodec(Long.class, Account.class));
@@ -84,6 +90,49 @@ public class ListenService {
                         .status("Failed")
                         .message("There is not debit card with that ID")
                         .build());
+            }
+        };
+    }
+
+    @Bean
+    Consumer<TransactionEvent> transaction() {
+        return transactionEvent -> {
+
+            Yanki yankiAux = Yanki.builder()
+                    .from(0L)
+                    .amount(transactionEvent.getAmount())
+                    .to(Long.parseLong(transactionEvent.getNumber()))
+                    .date(LocalDate.now())
+                    .build();
+
+            if (transactionEvent.getState().equals("Yanki")) {
+                accountRepository.findAccountByPhone(Long.parseLong(transactionEvent.getNumber()))
+                        .next()
+                        .flatMap(account -> yankiRepository.save(yankiAux)
+                                .thenReturn(account))
+                        .flatMap(accountAux -> accountService.getByPhone(accountAux.getPhone())
+                                .flatMap(accountTo -> {
+
+                                    if (!Objects.isNull(accountTo.getDebitCard())) {
+                                        return Mono.just(messageService.sendToAccount(Yanki.builder()
+                                                .from(null)
+                                                .to(accountAux.getPhone())
+                                                .amount(transactionEvent.getAmount())
+                                                .build()));
+                                    }
+
+                                    transactionEvent.setState("Completed");
+                                    messageService.sendTransaction(transactionEvent);
+
+                                    return accountService.updateAmountByPhone(accountTo.getPhone(), transactionEvent.getAmount())
+                                            .then(yankiRepository.save(yankiAux))
+                                            .then(Mono.just(messageService.sendResult(Result.builder()
+                                                    .to(accountTo.getPhone())
+                                                    .status("Success")
+                                                    .message("You received a Yanki of " + transactionEvent.getAmount() + " from a transaction")
+                                                    .build())));
+                                }))
+                        .subscribe();
             }
         };
     }

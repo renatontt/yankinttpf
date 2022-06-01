@@ -3,6 +3,7 @@ package com.group7.yanki.controller;
 import com.group7.yanki.dto.AccountRequest;
 import com.group7.yanki.dto.AccountResponse;
 import com.group7.yanki.dto.LinkRequest;
+import com.group7.yanki.dto.YankiTransaction;
 import com.group7.yanki.model.Yanki;
 import com.group7.yanki.service.AccountService;
 import com.group7.yanki.service.YankiService;
@@ -33,6 +34,12 @@ public class YankiController {
     @PostMapping("/link")
     public Mono<String> linkYanki(@RequestBody final LinkRequest linkRequest) {
         return service.linkYanki(linkRequest);
+    }
+
+    @PostMapping("/payTransaction")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<String> payTransaction(@RequestBody YankiTransaction yankiTransaction){
+        return service.payTransaction(yankiTransaction);
     }
 
 }

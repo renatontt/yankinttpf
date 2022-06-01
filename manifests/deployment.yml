@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: yankiservice
+  name: yankinttpf
   labels:
-    app: yankiservice
+    app: yankinttpf
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: yankiservice
+      service: yankinttpf
   template:
     metadata:
       labels:
-        app: yankiservice
-        service: yankiservice
+        app: yankinttpf
+        service: yankinttpf
     spec:
       containers:
-        - name: yankiservice
-          image: yankiservice.azurecr.io/yankiservice:v1
+        - name: yankinttpf
+          image: yankinttpf.azurecr.io/yankinttpf:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8083

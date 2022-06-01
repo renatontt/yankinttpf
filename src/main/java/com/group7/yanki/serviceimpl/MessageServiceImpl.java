@@ -2,6 +2,7 @@ package com.group7.yanki.serviceimpl;
 
 import com.group7.yanki.dto.LinkRequest;
 import com.group7.yanki.dto.Result;
+import com.group7.yanki.dto.TransactionEvent;
 import com.group7.yanki.model.Yanki;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,10 @@ public class MessageServiceImpl {
 
     public boolean sendToLink(LinkRequest linkRequest){
         return streamBridge.send("link-out-0",linkRequest);
+    }
+
+    public void sendTransaction(TransactionEvent transactionEvent){
+        streamBridge.send("transaction-out-0",transactionEvent);
     }
 
 }

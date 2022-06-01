@@ -6,4 +6,4 @@ COPY src src
 RUN mvn package -DskipTests
 RUN ls
 EXPOSE 8083
-ENTRYPOINT ["java","-jar","target/yankiservice-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java","-jar","target/yankinttpf-0.0.1-SNAPSHOT.jar"]
